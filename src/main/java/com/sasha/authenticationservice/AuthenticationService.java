@@ -11,4 +11,5 @@ public class AuthenticationService {
     public String testRest() {
         return "Hello world!";
     }
+
 }
