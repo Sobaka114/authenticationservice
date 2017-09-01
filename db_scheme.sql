@@ -11,3 +11,4 @@ encryption varchar(10)
 )
 ALTER TABLE user  ADD CONSTRAINT user_password_id
    FOREIGN KEY(password_id) REFERENCES password (ID) ON DELETE SET DEFAULT;
+
