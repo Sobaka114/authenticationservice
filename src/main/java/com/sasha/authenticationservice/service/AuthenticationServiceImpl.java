@@ -3,7 +3,6 @@ package com.sasha.authenticationservice.service;
 import com.sasha.authenticationservice.service.entity.UserEntity;
 import com.sasha.authenticationservice.service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import sun.misc.BASE64Decoder;
 
