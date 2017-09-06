@@ -1,24 +1,22 @@
 package com.sasha.authenticationservice.service;
 
+import com.sasha.authenticationservice.crypto.AES;
 import com.sasha.authenticationservice.service.entity.UserEntity;
 import com.sasha.authenticationservice.service.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import sun.misc.BASE64Decoder;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 @Service
+@Slf4j
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Autowired
@@ -37,7 +35,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         if (oneByName == null) {
             LoginResult loginResult = new LoginResult();
-            loginResult.setError("Login name is not right");
+            loginResult.setError("Login_name_is_not_right");
             return loginResult;
         }
         //first check salt
@@ -46,7 +44,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         loginResult.setUserName(oneByName.getName());
         //if salt doest not equals to the original , return password error;
         if (!checkSalts) {
-            loginResult.setError("password is not right");
+            loginResult.setError("password_is_not_right");
             return loginResult;
         }
         //check right part of password
@@ -54,30 +52,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         boolean checkDbPassword = checkDbPassword(right, oneByName);
         if (!checkDbPassword) {
             //code duplicate
-            loginResult.setError("password is not right");
+            loginResult.setError("password_is_not_right");
             return loginResult;
         }
-
+        log.info("Login is ok. " + userName);
         return loginResult;
     }
 
-    //can be depends on salt. Current realisation - only user name depends on encryption key
-    private SecretKeySpec getKey( UserEntity userEntity) throws UnsupportedEncodingException, NoSuchAlgorithmException {
-        byte[] key = (userEntity.getName()).getBytes("UTF-8");
-        MessageDigest sha = MessageDigest.getInstance("SHA-1");
-        key = sha.digest(key);
-        key = Arrays.copyOf(key, 16); // use only first 128 bit
-
-        return new SecretKeySpec(key, userEntity.getEncryption().toString());
-    }
-
     private boolean checkDbPassword(String right, UserEntity userEntity) throws NoSuchPaddingException, NoSuchAlgorithmException, IOException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher encryptCipher = Cipher.getInstance(userEntity.getEncryption().toString());
-        encryptCipher.init(Cipher.DECRYPT_MODE, getKey(userEntity));
-        byte[] decordedValue = new BASE64Decoder().decodeBuffer(userEntity.getPassword());
-        byte[] bytes = encryptCipher.doFinal(decordedValue);
-        String realPassword = new String(bytes);
-        return realPassword.equals(right);
+        if(userEntity.getEncryption() == UserEntity.EncryptionType.AES) {
+            String decrypt = AES.decrypt(userEntity.getPassword(), userEntity.getName());
+            return decrypt != null && decrypt.equals(right);
+        }
+        throw new UnsupportedOperationException("Encryption " + userEntity.getEncryption() + " Such encryption is not supported eat.");
     }
 
     private boolean checkSalts(String left, UserEntity oneByName) throws NoSuchAlgorithmException {

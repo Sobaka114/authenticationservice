@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -32,10 +34,18 @@ public class LoginController {
         return "login";
     }
 
-    @RequestMapping(value = "/login", method = RequestMethod.POST)
-    public LoginResult userLogin(String userName, String password) throws NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, IOException {
+    @RequestMapping(value = "/login", method = RequestMethod.POST, produces = "application/json")
+    public String userLogin(String userName, String password, HttpServletResponse response) throws NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, IOException {
         log.info("in login {} {} \n", userName, password);
-        return authenticationService.userLogin(userName, password);
+        LoginResult loginResult = authenticationService.userLogin(userName, password);
+        if(loginResult.getError() != null && !loginResult.getError().isEmpty()) {
+            //is not right!!!!
+            response.addCookie(new Cookie("MyAuthenticationService.error", loginResult.getError()));
+            return loginResult.getError();
+        } else {
+            response.addCookie(new Cookie("MyAuthenticationService.userName", userName));
+            return "hello";
+        }
     }
 
 }
