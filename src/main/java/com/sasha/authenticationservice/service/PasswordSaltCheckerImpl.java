@@ -29,12 +29,16 @@ public class PasswordSaltCheckerImpl implements PasswordSaltChecker {
 
     private String getRealSalt(UserEntity userEntity) {
         try {
-            byte[] bytes = Files.readAllBytes(Paths.get(filePath + "/" + userEntity.getName() + ".txt"));
+            byte[] bytes = Files.readAllBytes(Paths.get(getFilePath(userEntity)));
             return new String(bytes);
         } catch (IOException e) {
             log.error("file read exception", e);
         }
         return "";
+    }
+
+    private String getFilePath(UserEntity userEntity) {
+        return filePath + "/" + userEntity.getName() + userEntity.getId() + ".txt";
     }
 
     private String getSalt(String halfPassword) throws NoSuchAlgorithmException {
