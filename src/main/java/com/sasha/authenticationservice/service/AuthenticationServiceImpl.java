@@ -25,8 +25,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private PasswordSaltChecker passwordSaltChecker;
 
     public LoginResult userLogin(String userName, String password) throws NoSuchAlgorithmException, IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchPaddingException, IOException {
+        if(userName == null || userName.isEmpty()) {
+            log.info("user name is empty");
+            LoginResult loginResult = new LoginResult();
+            loginResult.setError("user_name_is_empty");
+            return loginResult;
+        }
         if (password.length() < 2) {
-            throw new IllegalStateException("password should not be less 2 symbols");
+            log.info("password should not be less 2 symbols");
+            LoginResult loginResult = new LoginResult();
+            loginResult.setError("password_too_short");
+            return loginResult;
         }
         String left = password.substring(0, password.length() / 2);
         String right = password.substring(password.length() / 2);

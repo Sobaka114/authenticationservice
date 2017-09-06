@@ -41,7 +41,7 @@ public class LoginController {
         if(loginResult.getError() != null && !loginResult.getError().isEmpty()) {
             //is not right!!!!
             response.addCookie(new Cookie("MyAuthenticationService.error", loginResult.getError()));
-            return loginResult.getError();
+            return "error";
         } else {
             response.addCookie(new Cookie("MyAuthenticationService.userName", userName));
             return "hello";

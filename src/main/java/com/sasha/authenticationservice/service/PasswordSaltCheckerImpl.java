@@ -1,14 +1,25 @@
 package com.sasha.authenticationservice.service;
 
 import com.sasha.authenticationservice.service.entity.UserEntity;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import sun.misc.BASE64Decoder;
 
+import java.io.IOException;
+import java.nio.file.Files;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 @Component
+@Slf4j
 public class PasswordSaltCheckerImpl implements PasswordSaltChecker {
+    @Value("${salt.file.path}")
+    String filePath;
+
     @Override
     public boolean checkSalt(String passwordLeft, UserEntity userEntity) throws NoSuchAlgorithmException {
         String salt = getSalt(passwordLeft);
@@ -16,16 +27,14 @@ public class PasswordSaltCheckerImpl implements PasswordSaltChecker {
         return salt.equals(realSalt);
     }
 
-    //Mock. get md5 for password from data_sql.
-    //TODO get it from file
     private String getRealSalt(UserEntity userEntity) {
-        if(userEntity.getId() == 1) {
-            return "bcbe3365e6ac95ea2c0343a2395834dd";
+        try {
+            byte[] bytes = Files.readAllBytes(Paths.get(filePath + "/" + userEntity.getName() + ".txt"));
+            return new String(bytes);
+        } catch (IOException e) {
+            log.error("file read exception", e);
         }
-        if(userEntity.getId() == 2) {
-            return "310dcbbf4cce62f762a2aaa148d556bd";
-        }
-        throw new UnsupportedOperationException("such user does not mocked.");
+        return "";
     }
 
     private String getSalt(String halfPassword) throws NoSuchAlgorithmException {
